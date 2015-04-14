@@ -2,10 +2,10 @@ Dynamic perspective on Android
 ==============================
 
 ###### Project for my Master's thesis on the topic "Tablet-based 3D Interaction".
-Manipulate 3D objects with multitoch and sensor interaction.
+Manipulate 3D objects with multitouch and sensor interaction.
 
 ### Prerequisites
-* OpenCV 2.4.10 : Add OpenCV via this method (http://bit.ly/1crx0Mh) or used to version in this repo.
+* OpenCV 2.4.10 : Add OpenCV via this method (http://bit.ly/1crx0Mh) or use the version provided in this repository.
 * Rajawali Engine : The engine is being included via gradle. Check out the main project here: (https://github.com/Rajawali/Rajawali)
 
 ### Description
