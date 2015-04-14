@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">MasterProject</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="face20">Face size 20%</string>
+    <string name="face30">Face size 30%</string>
+    <string name="face40">Face size 40%</string>
+    <string name="face50">Face size 50%</string>
+
+    <string name="showTracking">Preview face tracking</string>
+
+    <string name="resolutionList">Set resolution</string>
+</resources>
