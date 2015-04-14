@@ -13,7 +13,6 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.rajawali3d.Camera;
-import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.renderer.RajawaliRenderer;
 
 import java.math.BigDecimal;
@@ -32,24 +31,24 @@ public class JavaTracker {
 	private RajawaliRenderer renderer;
 
 	int camWidth, camHeight;
-	
-	float headX, headY, headZ;
-	
+
 	public JavaTracker(CascadeClassifier mJavaDetector2) {
 		this.mJavaDetector = mJavaDetector2;
 	}
-	public void setMinFaceSize(float faceSize) {
-		mRelativeFaceSize = faceSize;
-		mAbsoluteFaceSize = 0;
-	}
+
 	public Mat detectFace(CvCameraViewFrame inputFrame){
+
+        if ( inputFrame.rgba().empty() ){
+            Log.e(TAG, "inputFrame was empty.. returning empty Mat()");
+            return new Mat();
+        }
 
         Camera cam = renderer.getCurrentCamera();
 
         mRgba = inputFrame.rgba();
 		mGray = inputFrame.gray();
 
-        // flip the preview image to make sure the image acts like a mirror
+        // flip the preview image to make sure the preview acts like a mirror
 		Core.flip(mRgba, mRgba, 1);
 		Core.flip(mGray, mGray, 1);
 		
@@ -58,9 +57,8 @@ public class JavaTracker {
 
 		if (mAbsoluteFaceSize == 0) {
 			int height = mGray.rows();
-			if (Math.round(height * mRelativeFaceSize) > 0) {
+			if (Math.round(height * mRelativeFaceSize) > 0)
 				mAbsoluteFaceSize = Math.round(height * mRelativeFaceSize);
-			}
 		}
 
 		MatOfRect matFaces = new MatOfRect();
@@ -94,18 +92,14 @@ public class JavaTracker {
 			float tempX = (float) (normCenterX *cam.getZ());
 			float tempY = (float) (-normCenterY*cam.getZ());
 
-			Vector3 newCameraPosition = new Vector3(
-					round(cam.getX()*0.5f  + tempX*0.5f, 1),
-					round(cam.getY()*0.5f  + tempY*0.5f, 1),
-					round(cam.getZ()*0.5f  + tempZ*0.5f, 1));
-
+            // TODO: this is a hack
             tempZ=tempZ-100;
 
-			cam.setX(round(cam.getX()*0.5f  + tempX*0.5f, 1));
-			cam.setY(round(cam.getY()*0.5f  + tempY*0.5f, 1));
-			cam.setZ(round(cam.getZ()*0.99f  + tempZ*0.01f, 1));
+			cam.setX(cam.getX()*0.2f  + tempX*4f);
+			cam.setY(cam.getY()*0.5f  + tempY*0.5f);
+			cam.setZ(cam.getZ()*0.99f  + tempZ*0.01f);
 
-			Log.d(TAG, "Coord Cam : " + cam.getX() + " " + cam.getY() + " " + cam.getZ());
+			Log.d(TAG, "Coord  Cam : " + cam.getX() + " " + cam.getY() + " " + cam.getZ());
 			Log.d(TAG, "Coord Temp : " + tempX + " " + tempY + " " + tempZ );
 
 			Core.rectangle(mRgba, faces[i].tl(), faces[i].br(), Color.FACE_RECT_COLOR, 3);
@@ -136,6 +130,11 @@ public class JavaTracker {
         bd = bd.setScale(decimalPlace, BigDecimal.ROUND_HALF_UP);
         return bd.floatValue();
     }
+
+    public void setMinFaceSize(float faceSize) {
+        mRelativeFaceSize = faceSize;
+        mAbsoluteFaceSize = 0;
+    }
 	
 	public void init(int width, int height) {
 		this.camWidth = width;
@@ -145,29 +144,11 @@ public class JavaTracker {
 	}
 	
 	public void release() {
-		Log.i(TAG, "releasing Gray+RGBA");
+		Log.i(TAG, "releasing Gray + RGBA");
 		mGray.release();
 		mRgba.release();
 	}
 
-	public float getHeadX() {
-		return headX;
-	}
-	public void setHeadX(float headX) {
-		this.headX = headX;
-	}
-	public float getHeadY() {
-		return headY;
-	}
-	public void setHeadY(float headY) {
-		this.headY = headY;
-	}
-	public float getHeadZ() {
-		return headZ;
-	}
-	public void setHeadZ(float headZ) {
-		this.headZ = headZ;
-	}
 	public float getCamWidth() {
 		return camWidth;
 	}

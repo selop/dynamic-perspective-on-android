@@ -185,6 +185,7 @@ CvCameraViewListener2, OnTouchListener, SensorEventListener {
         if (item.getGroupId() == 2)
         {
             int id = item.getItemId();
+            // TODO: replaced deprecated class
             android.hardware.Camera.Size resolution = mResolutionList.get(id);
             mOpenCvCameraView.setResolution(resolution);
             resolution = mOpenCvCameraView.getResolution();
@@ -258,10 +259,6 @@ CvCameraViewListener2, OnTouchListener, SensorEventListener {
 	}
 
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-		if(inputFrame.rgba().empty()){
-			Log.e(TAG, "input frame empty..");
-			return null;
-		}
 		return jTracker.detectFace(inputFrame);
 	}	
 	
@@ -284,7 +281,4 @@ CvCameraViewListener2, OnTouchListener, SensorEventListener {
 		super.onResume();
 		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
 	}
-	
-
-
 }
