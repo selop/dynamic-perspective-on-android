@@ -14,9 +14,12 @@ public abstract class AbstractTrackingRenderer extends RajawaliRenderer {
         super(context);
     }
 
-    boolean showTracking = true;
+    protected boolean showTracking = true;
 
-    public abstract boolean isShowTracking();
-
-    public abstract void setShowTracking(boolean showTracking);
+    public void toggleShowTracking(){
+        if(showTracking)
+            showTracking = false;
+        else
+            showTracking = true;
+    }
 }

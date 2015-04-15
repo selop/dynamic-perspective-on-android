@@ -23,4 +23,5 @@ dependencies {
     compile 'org.rajawali3d:rajawali:1.0.186-SNAPSHOT@aar'
     compile 'com.android.support:appcompat-v7:22.0.0'
     compile 'com.android.support:support-v13:22.0.0'
+    compile 'com.jakewharton:butterknife:6.1.0'
 }

@@ -20,7 +20,6 @@ import javax.microedition.khronos.opengles.GL10;
 import de.tud.lopatkin.masterproject.R;
 import de.tud.lopatkin.masterproject.model.PlanesGalore;
 import de.tud.lopatkin.masterproject.model.PlanesGaloreMaterialPlugin;
-import de.tud.lopatkin.masterproject.tracking.OffAxisPerspective;
 
 public class PlanesRenderer extends AbstractTrackingRenderer {
 
@@ -29,7 +28,7 @@ public class PlanesRenderer extends AbstractTrackingRenderer {
     private Material mMaterial;
     private PlanesGaloreMaterialPlugin mMaterialPlugin;
 
-	private OffAxisPerspective mOffAxisPerspective;
+	//private OffAxisPerspective mOffAxisPerspective;
 
 	private long mStartTime;
 
@@ -97,9 +96,8 @@ public class PlanesRenderer extends AbstractTrackingRenderer {
 		
 		// -- set the background color to be transparent
 		// you need to have called setGLBackgroundTransparent(true); in the
-		// activity
-		// for this to work.
-		if(isShowTracking()){
+		// activity for this to work.
+		if(showTracking){
 			getCurrentScene().setBackgroundColor(0, 0, 0, 0);
 		} else {
 			getCurrentScene().setBackgroundColor(0, 0, 0, 255);
@@ -107,14 +105,6 @@ public class PlanesRenderer extends AbstractTrackingRenderer {
 
         mMaterial.setTime((System.currentTimeMillis() - mStartTime) / 1000f);
         mMaterialPlugin.setCameraPosition(getCurrentCamera().getPosition());
-	}
-
-	public boolean isShowTracking() {
-		return showTracking;
-	}
-
-	public void setShowTracking(boolean showTracking) {
-		this.showTracking = showTracking;
 	}
 
     public void onTouchEvent(MotionEvent event){}

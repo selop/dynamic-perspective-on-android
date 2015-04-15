@@ -2,6 +2,7 @@ package de.tud.lopatkin.masterproject;
 
 import android.app.ActionBar;
 import android.content.Context;
+import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -13,7 +14,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SubMenu;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
@@ -35,29 +35,61 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.ListIterator;
 
+import butterknife.ButterKnife;
+import butterknife.OnTouch;
 import de.tud.lopatkin.masterproject.tracking.AdjustableCameraView;
 import de.tud.lopatkin.masterproject.tracking.JavaTracker;
+import de.tud.lopatkin.masterproject.util.Common;
 import de.tud.lopatkin.masterproject.views.AbstractTrackingRenderer;
 import de.tud.lopatkin.masterproject.views.PlanesRenderer;
 
 public class MainActivity extends ActionBarActivity implements
-CvCameraViewListener2, OnTouchListener, SensorEventListener {
+CvCameraViewListener2, SensorEventListener {
 
+    /**
+     * The tag for logging.
+     */
 	private static final String TAG = "MasterProject::Activity";
 
-	private List<android.hardware.Camera.Size> mResolutionList;
+    /**
+     * This field holds all possible resolutions available for the given camera.
+     * Note that the deprecated class is due to the openCV implementation.
+     */
+    @SuppressWarnings( "deprecation" )
+	private List<Camera.Size> mResolutionList;
 
-	/// Tracking components
-	private File mCascadeFile;
-	private CascadeClassifier mJavaDetector;	
+    /**
+     * The Haar cascade classifier which is used to detect faces while tracking.
+     */
+	private CascadeClassifier mCascadeClassifier;
+
+    /**
+     * Modified cvCameraView class which is based on the JavaCameraView class.
+     *
+     */
 	private AdjustableCameraView mOpenCvCameraView;
-	private JavaTracker jTracker; 
-	
-	// OpenGL Renderer class
+
+    /**
+     * Java based face tracker based on Haar cascade detection.
+     */
+	private JavaTracker jTracker;
+
+    /**
+     * The rajawali renderer class.
+     */
 	private AbstractTrackingRenderer mRenderer;
 
+    public MainActivity() {
+        Log.i(TAG, "Instantiated new " + ((Object) this).getClass());
+    }
+
+    /**
+     * The Callback for loading the OpenCV library.
+     * If the lib has been loaded successfully the cvCameraView is being started
+     * The fps meter will be enabled
+     * The tracker will be initialised with the loaded Haar cascade classifier.
+     */
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 		@Override
 		public void onManagerConnected(int status) {
@@ -69,7 +101,7 @@ CvCameraViewListener2, OnTouchListener, SensorEventListener {
 					// load cascade file from application resources
 					InputStream is = getResources().openRawResource(R.raw.lbpcascade_frontalface);
 					File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-					mCascadeFile = new File(cascadeDir,"lbpcascade_frontalface.xml");
+                    File mCascadeFile = new File(cascadeDir,"lbpcascade_frontalface.xml");
 					FileOutputStream os = new FileOutputStream(mCascadeFile);
 
 					byte[] buffer = new byte[4096];
@@ -80,10 +112,10 @@ CvCameraViewListener2, OnTouchListener, SensorEventListener {
 					is.close();
 					os.close();
 
-					mJavaDetector = new CascadeClassifier(mCascadeFile.getAbsolutePath());
-					if (mJavaDetector.empty()) {
+					mCascadeClassifier = new CascadeClassifier(mCascadeFile.getAbsolutePath());
+					if (mCascadeClassifier.empty()) {
 						Log.e(TAG, "Failed to load cascade classifier");
-						mJavaDetector = null;
+						mCascadeClassifier = null;
 					} else
 						Log.i(TAG, "Loaded cascade classifier from "+ mCascadeFile.getAbsolutePath());
 					cascadeDir.delete();
@@ -94,11 +126,10 @@ CvCameraViewListener2, OnTouchListener, SensorEventListener {
 				}
 				
 				// has all the OpenCV calls to detect faces / eyes
-				jTracker = new JavaTracker(mJavaDetector);
+				jTracker = new JavaTracker(mCascadeClassifier);
 
 				mOpenCvCameraView.enableView();
 				mOpenCvCameraView.enableFpsMeter();
-                // TODO: check how to fix actionbar resolution problem
                 //mOpenCvCameraView.setMaxFrameSize(480,320);
 			}
 				break;
@@ -110,23 +141,51 @@ CvCameraViewListener2, OnTouchListener, SensorEventListener {
 			}
 		}
 	};
-	
-	public MainActivity() {
-		Log.i(TAG, "Instantiated new " + ((Object) this).getClass());
-	}
-	
+
+    // ------------------------------ OpenCV Callbacks --------------------------------------- //
+
+    /**
+     * Called as the cvCameraView is being started.
+     *
+     * @param width -  the width of the frames that will be delivered
+     * @param height - the height of the frames that will be delivered
+     */
+    public void onCameraViewStarted(int width, int height) {
+        jTracker.init(width,height);
+        jTracker.setRenderer(mRenderer);
+    }
+
+    /**
+     * Called as the cvCameraView is being stopped.
+     *
+     */
+    public void onCameraViewStopped() {
+        jTracker.release();
+    }
+
+    /**
+     * Called on every new frame grabbed by the CvCameraView.
+     *
+     * @param inputFrame the current Preview frame
+     * @return the processed input frame as Mat
+     */
+    public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+        return jTracker.detectFace(inputFrame);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	Log.i(TAG, "called onCreate");
     	super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
+
+        ButterKnife.inject(this);
 
         // Open a custom CameraView with options to adjust resolution
         mOpenCvCameraView = (AdjustableCameraView) findViewById(R.id.fd_activity_surface_view);
         mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
         mOpenCvCameraView.setCvCameraViewListener(this);
-        mOpenCvCameraView.setOnTouchListener(this);
+        //mOpenCvCameraView.setOnTouchListener(this);
 
     	// Make sure the screen won't dim
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -143,6 +202,7 @@ CvCameraViewListener2, OnTouchListener, SensorEventListener {
         addContentView(surface, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT));
 
 		// assign our renderer class for 3D related processing
+        // TODO: make this interchangable via fragmets or activity switches
         mRenderer = new PlanesRenderer(this);
         //mRenderer = new CubeRoomRenderer(this);
         surface.setSurfaceRenderer(mRenderer);
@@ -150,48 +210,29 @@ CvCameraViewListener2, OnTouchListener, SensorEventListener {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
         getMenuInflater().inflate(R.menu.menu, menu);
-
-        MenuItem[] mResolutionMenuItems;
-        SubMenu mResolutionMenu;
-
-        int idx = 0;
-        mResolutionMenu = menu.addSubMenu("Resolution");
+        SubMenu mResolutionMenu = menu.addSubMenu("Resolution");
         mResolutionList = mOpenCvCameraView.getResolutionList();
-        mResolutionMenuItems = new MenuItem[mResolutionList.size()];
-
-        ListIterator<android.hardware.Camera.Size> resolutionItr = mResolutionList.listIterator();
-
-        while (resolutionItr.hasNext()) {
-            android.hardware.Camera.Size element = resolutionItr.next();
-            mResolutionMenuItems[idx] = mResolutionMenu.add(
-                    2,
-                    idx,
-                    Menu.NONE,
-                    Integer.valueOf(element.width).toString() + "x" +
-                    Integer.valueOf(element.height).toString());
+        int idx = 0;
+        for(Camera.Size size : mResolutionList){
+            mResolutionMenu.add(2,idx,Menu.NONE,Common.asString(size));
             idx++;
         }
-
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         Log.i(TAG, "called onOptionsItemSelected; selected item: " + item);
 
         if (item.getGroupId() == 2)
         {
             int id = item.getItemId();
-            // TODO: replaced deprecated class
-            android.hardware.Camera.Size resolution = mResolutionList.get(id);
+
+            Camera.Size resolution = mResolutionList.get(id);
             mOpenCvCameraView.setResolution(resolution);
-            resolution = mOpenCvCameraView.getResolution();
-            String caption = Integer.valueOf(resolution.width).toString() +
-                    "x" + Integer.valueOf(resolution.height).toString();
-            Toast.makeText(this, caption, Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(this, Common.asString(resolution), Toast.LENGTH_SHORT).show();
             return super.onOptionsItemSelected(item);
         }
 
@@ -209,59 +250,13 @@ CvCameraViewListener2, OnTouchListener, SensorEventListener {
                 jTracker.setMinFaceSize(0.5f);
                 return true;
             case R.id.menu_show_tracking:
-                if(mRenderer.isShowTracking())
-                    mRenderer.setShowTracking(false);
-                else
-                    mRenderer.setShowTracking(true);
+                mRenderer.toggleShowTracking();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-	@Override
-	public void onAccuracyChanged(Sensor arg0, int arg1) {}
-
-	@Override
-	public void onSensorChanged(SensorEvent arg0) {}
-
-	@Override
-	public boolean onTouch(View view, MotionEvent event) {
-        int _xDelta = 0;
-        int _yDelta = 0;
-
-        final int X = (int) event.getRawX();
-        final int Y = (int) event.getRawY();
-        switch (event.getAction() & MotionEvent.ACTION_MASK) {
-            case MotionEvent.ACTION_DOWN:
-                FrameLayout.LayoutParams lParams = (FrameLayout.LayoutParams) view.getLayoutParams();
-                _xDelta = X - lParams.leftMargin;
-                _yDelta = Y - lParams.topMargin;
-                break;
-            case MotionEvent.ACTION_MOVE:
-                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view.getLayoutParams();
-                layoutParams.leftMargin = X - _xDelta;
-                layoutParams.topMargin = Y - _yDelta;
-                view.setLayoutParams(layoutParams);
-                break;
-        }
-        mOpenCvCameraView.invalidate();
-        return true;
-	}
-
-	public void onCameraViewStarted(int width, int height) {
-		jTracker.init(width,height);
-		jTracker.setRenderer(mRenderer);
-	}
-
-	public void onCameraViewStopped() {
-		jTracker.release();
-	}
-
-	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-		return jTracker.detectFace(inputFrame);
-	}	
-	
 	@Override
 	public void onPause() {
 		super.onPause();
@@ -281,4 +276,45 @@ CvCameraViewListener2, OnTouchListener, SensorEventListener {
 		super.onResume();
 		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
 	}
+
+    @Override
+    public void onAccuracyChanged(Sensor arg0, int arg1) {}
+
+    @Override
+    public void onSensorChanged(SensorEvent arg0) {}
+
+    int prevX = 0,prevY = 0; // this has to be outside of the callback
+    @OnTouch(R.id.fd_activity_surface_view)
+    public boolean dragPreview(final View v,final MotionEvent event){
+        final FrameLayout.LayoutParams par=(FrameLayout.LayoutParams)v.getLayoutParams();
+        switch(event.getAction())
+        {
+            case MotionEvent.ACTION_MOVE:
+            {
+                par.topMargin+=(int)event.getRawY()-prevY;
+                prevY=(int)event.getRawY();
+                par.leftMargin+=(int)event.getRawX()-prevX;
+                prevX=(int)event.getRawX();
+                v.setLayoutParams(par);
+                return true;
+            }
+            case MotionEvent.ACTION_UP:
+            {
+                par.topMargin+=(int)event.getRawY()-prevY;
+                par.leftMargin+=(int)event.getRawX()-prevX;
+                v.setLayoutParams(par);
+                return true;
+            }
+            case MotionEvent.ACTION_DOWN:
+            {
+                prevX=(int)event.getRawX();
+                prevY=(int)event.getRawY();
+                par.bottomMargin=-2*v.getHeight();
+                par.rightMargin=-2*v.getWidth();
+                v.setLayoutParams(par);
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -11,14 +11,13 @@ import org.rajawali3d.primitives.Plane;
 import org.rajawali3d.util.ObjectColorPicker;
 import org.rajawali3d.util.OnObjectPickedListener;
 
-
 /**
  * This class renderes a room with monkeys to test object picking.
  */
 public class CubeRoomRenderer extends AbstractTrackingRenderer implements OnObjectPickedListener {
 
     private PointLight mLight;
-    private Object3D mMonkey1, mMonkey2, mMonkey3, mMonkey4, back,side1,side2,bottom,top;
+    private Object3D back,side1,side2,bottom,top;
     private ObjectColorPicker mPicker;
 
     public CubeRoomRenderer(Context context) {
@@ -27,7 +26,6 @@ public class CubeRoomRenderer extends AbstractTrackingRenderer implements OnObje
     }
 
     protected void initScene() {
-
         try {
             mPicker = new ObjectColorPicker(this);
             mPicker.setOnObjectPickedListener(this);
@@ -92,17 +90,13 @@ public class CubeRoomRenderer extends AbstractTrackingRenderer implements OnObje
         super.onRender(elapsedTime, deltaTime);
 
         // -- set the background color to be transparent
-        // you need to have called setGLBackgroundTransparent(true); in the
-        // activity
-        // for this to work.
-        if(isShowTracking()){
+        // you need to have called setGLBackgroundTransparent(true);
+        // in the activity for this to work.
+        if(showTracking)
             getCurrentScene().setBackgroundColor(0, 0, 0, 0);
-        } else {
+        else
             getCurrentScene().setBackgroundColor(0, 0, 0, 255);
-        }
-
     }
-
 
     public void onTouchEvent(MotionEvent event){}
 
@@ -115,13 +109,5 @@ public class CubeRoomRenderer extends AbstractTrackingRenderer implements OnObje
     @Override
     public void onObjectPicked(Object3D object) {
         object.setZ(object.getZ() == 0 ? -2 : 0);
-    }
-
-    public boolean isShowTracking() {
-        return showTracking;
-    }
-
-    public void setShowTracking(boolean showTracking) {
-        this.showTracking = showTracking;
     }
 }
