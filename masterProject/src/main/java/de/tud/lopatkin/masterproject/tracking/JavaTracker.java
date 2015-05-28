@@ -97,14 +97,14 @@ public class JavaTracker {
 			float tempY = (float) (-normCenterY*cam.getZ());
 
             // TODO: this is a hack
-            tempZ=tempZ-50;
+            tempZ=tempZ-80;
 
 			cam.setX(cam.getX()*0.2f  + tempX*4f);
-			cam.setY(cam.getY()*0.5f  + tempY*0.5f);
+			cam.setY(cam.getY()*0.7f  + tempY*0.2f);
 			cam.setZ(cam.getZ()*0.99f  + tempZ*0.01f);
 
 			Log.d(TAG, "Coord  Cam : " + cam.getX() + " " + cam.getY() + " " + cam.getZ());
-			Log.d(TAG, "Coord Temp : " + tempX + " " + tempY + " " + tempZ );
+			Log.d(TAG, "Coord  Tmp : " + tempX + " " + tempY + " " + tempZ );
 
 			Core.rectangle(mRgba, face.tl(), face.br(), Color.FACE_RECT_COLOR, 3);
 
