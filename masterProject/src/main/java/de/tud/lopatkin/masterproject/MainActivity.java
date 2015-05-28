@@ -7,6 +7,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -42,6 +43,7 @@ import de.tud.lopatkin.masterproject.tracking.AdjustableCameraView;
 import de.tud.lopatkin.masterproject.tracking.JavaTracker;
 import de.tud.lopatkin.masterproject.util.Common;
 import de.tud.lopatkin.masterproject.views.AbstractTrackingRenderer;
+import de.tud.lopatkin.masterproject.views.CubeRoomRenderer;
 import de.tud.lopatkin.masterproject.views.PlanesRenderer;
 
 public class MainActivity extends ActionBarActivity implements
@@ -76,9 +78,11 @@ CvCameraViewListener2, SensorEventListener {
 	private JavaTracker jTracker;
 
     /**
-     * The rajawali renderer class.
+     * The Rajawali renderer class.
      */
 	private AbstractTrackingRenderer mRenderer;
+
+    private Handler mHandler = new Handler();
 
     public MainActivity() {
         Log.i(TAG, "Instantiated new " + ((Object) this).getClass());
@@ -86,8 +90,8 @@ CvCameraViewListener2, SensorEventListener {
 
     /**
      * The Callback for loading the OpenCV library.
-     * If the lib has been loaded successfully the cvCameraView is being started
-     * The fps meter will be enabled
+     * If the lib has been loaded successfully the cvCameraView is being started.
+     * The fps meter will be enabled.
      * The tracker will be initialised with the loaded Haar cascade classifier.
      */
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -147,7 +151,7 @@ CvCameraViewListener2, SensorEventListener {
     /**
      * Called as the cvCameraView is being started.
      *
-     * @param width -  the width of the frames that will be delivered
+     * @param width  - the width of the frames that will be delivered
      * @param height - the height of the frames that will be delivered
      */
     public void onCameraViewStarted(int width, int height) {
@@ -173,11 +177,21 @@ CvCameraViewListener2, SensorEventListener {
         return jTracker.detectFace(inputFrame);
     }
 
+    private void stallActivity() {
+        Toast.makeText(this, "Delayed Toast!", Toast.LENGTH_SHORT).show();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	Log.i(TAG, "called onCreate");
     	super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mHandler.postDelayed(new Runnable() {
+            public void run() {
+                stallActivity();
+            }
+        }, 5000);
 
         ButterKnife.inject(this);
 
@@ -186,9 +200,6 @@ CvCameraViewListener2, SensorEventListener {
         mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
         mOpenCvCameraView.setCvCameraViewListener(this);
         //mOpenCvCameraView.setOnTouchListener(this);
-
-    	// Make sure the screen won't dim
-		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // Create OpenGL Surface
         final RajawaliSurfaceView surface = new RajawaliSurfaceView(this);
@@ -201,17 +212,25 @@ CvCameraViewListener2, SensorEventListener {
         // Add mSurface to your root view
         addContentView(surface, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT));
 
-		// assign our renderer class for 3D related processing
+        // assign our renderer class for 3D related processing
         // TODO: make this interchangable via fragmets or activity switches
-        mRenderer = new PlanesRenderer(this);
-        //mRenderer = new CubeRoomRenderer(this);
+        //mRenderer = new PlanesRenderer(this);
+        mRenderer = new CubeRoomRenderer(this);
         surface.setSurfaceRenderer(mRenderer);
+
+    	// Make sure the screen won't dim
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
         SubMenu mResolutionMenu = menu.addSubMenu("Resolution");
+        try {
+            Thread.sleep(1000);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         mResolutionList = mOpenCvCameraView.getResolutionList();
         int idx = 0;
         for(Camera.Size size : mResolutionList){
@@ -316,5 +335,21 @@ CvCameraViewListener2, SensorEventListener {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mRenderer.getObjectAt(event.getX(), event.getY());
+                break;
+            case MotionEvent.ACTION_MOVE:
+                mRenderer.moveSelectedObject(event.getX(), event.getY());
+                break;
+            case MotionEvent.ACTION_UP:
+                mRenderer.stopMovingSelectedObject();
+                break;
+        }
+        return true;
     }
 }

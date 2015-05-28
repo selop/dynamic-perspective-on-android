@@ -1,6 +1,7 @@
 package de.tud.lopatkin.masterproject.views;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.animation.AccelerateDecelerateInterpolator;
 
@@ -12,7 +13,11 @@ import org.rajawali3d.lights.PointLight;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.Texture;
+import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.vector.Vector3;
+import org.rajawali3d.util.GLU;
+import org.rajawali3d.util.ObjectColorPicker;
+import org.rajawali3d.util.OnObjectPickedListener;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -21,12 +26,28 @@ import de.tud.lopatkin.masterproject.R;
 import de.tud.lopatkin.masterproject.model.PlanesGalore;
 import de.tud.lopatkin.masterproject.model.PlanesGaloreMaterialPlugin;
 
-public class PlanesRenderer extends AbstractTrackingRenderer {
+public class PlanesRenderer extends AbstractTrackingRenderer implements OnObjectPickedListener {
+
+    /**
+     * The tag for logging.
+     */
+    private static final String TAG = "PlanesRenderer";
 
     public Context context;
 
     private Material mMaterial;
     private PlanesGaloreMaterialPlugin mMaterialPlugin;
+
+    private ObjectColorPicker mPicker;
+    private Object3D mSelectedObject;
+    private int[] mViewport;
+    private double[] mNearPos4;
+    private double[] mFarPos4;
+    private Vector3 mNearPos;
+    private Vector3 mFarPos;
+    private Vector3 mNewObjPos;
+    private Matrix4 mViewMatrix;
+    private Matrix4 mProjectionMatrix;
 
 	//private OffAxisPerspective mOffAxisPerspective;
 
@@ -39,6 +60,18 @@ public class PlanesRenderer extends AbstractTrackingRenderer {
 	}
 
 	protected void initScene() {
+        mViewport = new int[] { 0, 0, getViewportWidth(), getViewportHeight() };
+        mNearPos4 = new double[4];
+        mFarPos4 = new double[4];
+        mNearPos = new Vector3();
+        mFarPos = new Vector3();
+        mNewObjPos = new Vector3();
+        mViewMatrix = getCurrentCamera().getViewMatrix();
+        mProjectionMatrix = getCurrentCamera().getProjectionMatrix();
+
+        mPicker = new ObjectColorPicker(this);
+        mPicker.setOnObjectPickedListener(this);
+
         PointLight light = new PointLight();
         light.setPosition(0,0,0);
         light.setPower(10f);
@@ -58,6 +91,7 @@ public class PlanesRenderer extends AbstractTrackingRenderer {
 
         planes.setDoubleSided(true);
         planes.setZ(4);
+        mPicker.registerObject(planes);
         getCurrentScene().addChild(planes);
 
         Object3D empty = new Object3D();
@@ -84,6 +118,14 @@ public class PlanesRenderer extends AbstractTrackingRenderer {
         getCurrentCamera().setLookAt(new Vector3(0, 0, 30));
 	}
 
+    public void onRenderSurfaceSizeChanged(GL10 gl, int width, int height) {
+        super.onRenderSurfaceSizeChanged(gl, width, height);
+        mViewport[2] = getViewportWidth();
+        mViewport[3] = getViewportHeight();
+        mViewMatrix = getCurrentCamera().getViewMatrix();
+        mProjectionMatrix = getCurrentCamera().getProjectionMatrix();
+    }
+
     @Override
     public void onRenderSurfaceCreated(EGLConfig config, GL10 gl, int width, int height) {
         super.onRenderSurfaceCreated(config, gl, width, height);
@@ -107,7 +149,82 @@ public class PlanesRenderer extends AbstractTrackingRenderer {
         mMaterialPlugin.setCameraPosition(getCurrentCamera().getPosition());
 	}
 
-    public void onTouchEvent(MotionEvent event){}
+    @Override
+    public void onTouchEvent(MotionEvent event){
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                getObjectAt(event.getX(), event.getY());
+                break;
+            case MotionEvent.ACTION_MOVE:
+                moveSelectedObject(event.getX(),
+                        event.getY());
+                break;
+            case MotionEvent.ACTION_UP:
+                stopMovingSelectedObject();
+                break;
+        }
+    }
+
+    public void getObjectAt(float x, float y) {
+        mPicker.getObjectAt(x, y);
+    }
+
+    public void onObjectPicked(Object3D object) {
+        mSelectedObject = object;
+    }
+
+    public void moveSelectedObject(float x, float y) {
+        if (mSelectedObject == null){
+            Log.e(TAG,"mSelectedObject = null");
+            return;
+        }
+
+        //
+        // -- unproject the screen coordinate (2D) to the camera's near plane
+        //
+
+        GLU.gluUnProject(x, getViewportHeight() - y, 0, mViewMatrix.getDoubleValues(), 0,
+                mProjectionMatrix.getDoubleValues(), 0, mViewport, 0, mNearPos4, 0);
+
+        //
+        // -- unproject the screen coordinate (2D) to the camera's far plane
+        //
+
+        GLU.gluUnProject(x, getViewportHeight() - y, 1.f, mViewMatrix.getDoubleValues(), 0,
+                mProjectionMatrix.getDoubleValues(), 0, mViewport, 0, mFarPos4, 0);
+
+        //
+        // -- transform 4D coordinates (x, y, z, w) to 3D (x, y, z) by dividing
+        // each coordinate (x, y, z) by w.
+        //
+
+        mNearPos.setAll(mNearPos4[0] / mNearPos4[3], mNearPos4[1]
+                / mNearPos4[3], mNearPos4[2] / mNearPos4[3]);
+        mFarPos.setAll(mFarPos4[0] / mFarPos4[3],
+                mFarPos4[1] / mFarPos4[3], mFarPos4[2] / mFarPos4[3]);
+
+        //
+        // -- now get the coordinates for the selected object
+        //
+
+        double factor = (Math.abs(mSelectedObject.getZ()) + mNearPos.z)
+                / (getCurrentCamera().getFarPlane() - getCurrentCamera()
+                .getNearPlane());
+
+        mNewObjPos.setAll(mFarPos);
+        mNewObjPos.subtract(mNearPos);
+        mNewObjPos.multiply(factor);
+        mNewObjPos.add(mNearPos);
+
+        mSelectedObject.setX(mNewObjPos.x);
+        mSelectedObject.setY(mNewObjPos.y);
+    }
+
+    public void stopMovingSelectedObject() {
+        mSelectedObject = null;
+    }
+
+
 
     public void onOffsetsChanged(float x, float y, float z, float w, int i, int j){}
 

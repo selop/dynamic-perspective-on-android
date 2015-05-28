@@ -12,7 +12,8 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
-import org.rajawali3d.Camera;
+
+import org.rajawali3d.cameras.Camera;
 import org.rajawali3d.renderer.RajawaliRenderer;
 
 import java.math.BigDecimal;
@@ -96,7 +97,7 @@ public class JavaTracker {
 			float tempY = (float) (-normCenterY*cam.getZ());
 
             // TODO: this is a hack
-            tempZ=tempZ-100;
+            tempZ=tempZ-50;
 
 			cam.setX(cam.getX()*0.2f  + tempX*4f);
 			cam.setY(cam.getY()*0.5f  + tempY*0.5f);

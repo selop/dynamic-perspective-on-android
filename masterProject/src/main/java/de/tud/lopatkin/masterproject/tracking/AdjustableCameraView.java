@@ -10,6 +10,7 @@ import android.util.Log;
 import org.opencv.android.JavaCameraView;
 
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AdjustableCameraView extends JavaCameraView implements PictureCallback {
@@ -44,7 +45,16 @@ public class AdjustableCameraView extends JavaCameraView implements PictureCallb
     }
 
     public List<Size> getResolutionList() {
-        return mCamera.getParameters().getSupportedPreviewSizes();
+        if(mCamera == null){
+            Log.e(TAG,"Camers is null...");
+            List<Size> sizes = new ArrayList<Size>();
+            return sizes;
+        }
+
+        for(Size s : mCamera.getParameters().getSupportedPictureSizes()){
+            Log.d(TAG,"size: "+ s.toString());
+        }
+        return mCamera.getParameters().getSupportedPictureSizes();
     }
 
     public void setResolution(Size resolution) {

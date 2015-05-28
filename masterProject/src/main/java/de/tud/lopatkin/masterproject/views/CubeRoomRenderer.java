@@ -1,24 +1,42 @@
 package de.tud.lopatkin.masterproject.views;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import org.rajawali3d.Object3D;
+import org.rajawali3d.animation.Animation;
+import org.rajawali3d.animation.Animation3D;
+import org.rajawali3d.animation.RotateOnAxisAnimation;
 import org.rajawali3d.lights.PointLight;
+import org.rajawali3d.loader.Loader3DSMax;
+import org.rajawali3d.loader.LoaderOBJ;
+import org.rajawali3d.loader.ParsingException;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
+import org.rajawali3d.math.Matrix4;
+import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.primitives.Plane;
+import org.rajawali3d.util.GLU;
 import org.rajawali3d.util.ObjectColorPicker;
 import org.rajawali3d.util.OnObjectPickedListener;
 
+import javax.microedition.khronos.opengles.GL10;
+
+import de.tud.lopatkin.masterproject.R;
+
 /**
- * This class renderes a room with monkeys to test object picking.
+ * This class displays a room with monkeys to test object picking.
  */
 public class CubeRoomRenderer extends AbstractTrackingRenderer implements OnObjectPickedListener {
-
+    /**
+     * The tag for logging.
+     */
+    private static final String TAG = "CubeRoomRenderer";
     private PointLight mLight;
     private Object3D back,side1,side2,bottom,top;
-    private ObjectColorPicker mPicker;
+    private Object3D mObjectGroup;
+    private Animation3D mCameraAnim;
 
     public CubeRoomRenderer(Context context) {
         super(context);
@@ -26,63 +44,42 @@ public class CubeRoomRenderer extends AbstractTrackingRenderer implements OnObje
     }
 
     protected void initScene() {
+
+        mLight = new PointLight();
+        mLight.setPosition(-2, 1, 4);
+        mLight.setPower(1f);
+
+        mPicker = new ObjectColorPicker(this);
+        mPicker.setOnObjectPickedListener(this);
+        getCurrentScene().addLight(mLight);
+        getCurrentCamera().setZ(15);
+
+        Loader3DSMax dsParser = new Loader3DSMax(this,R.raw.castle);
+        LoaderOBJ objParser = new LoaderOBJ(mContext.getResources(),
+                mTextureManager, R.raw.multiobjects_obj);
         try {
-            mPicker = new ObjectColorPicker(this);
-            mPicker.setOnObjectPickedListener(this);
-            mLight = new PointLight();
-            mLight.setPosition(-2, 1, 4);
-            mLight.setPower(2.5f);
-            getCurrentCamera().setPosition(0, 0, 10);
+            objParser.parse();
+            mObjectGroup = objParser.getParsedObject();
 
-            mPicker = new ObjectColorPicker(this);
-            mPicker.setOnObjectPickedListener(this);
-            mLight = new PointLight();
-            mLight.setPosition(-2, 1, 4);
-            mLight.setPower(1.5f);
-            getCurrentScene().addLight(mLight);
-            getCurrentCamera().setPosition(0, 0, 7);
+            mPicker.registerObject(mObjectGroup);
+            getCurrentScene().addChild(mObjectGroup);
 
-            Material material = new Material();
-            material.enableLighting(true);
-            material.setDiffuseMethod(new DiffuseMethod.Lambert());
-
-            back = new Plane(10,10,1,1);
-            back.setPosition(0,0, -10);
-            getCurrentScene().addChild(back);
-
-            side1 = new Plane(10,10,1,1);
-            side1.setPosition(-5,0,-5);
-            side1.setRotY(270);
-            getCurrentScene().addChild(side1);
-
-            side2 = new Plane(10,10,1,1);
-            side2.setPosition(5,0, -5);
-            side2.setRotY(90);
-            getCurrentScene().addChild(side2);
-
-            bottom = new Plane(10,10,1,1);
-            bottom.setPosition(0,-5,-5);
-            bottom.setRotX(90);
-            getCurrentScene().addChild(bottom);
-
-            top = new Plane(10,10,1,1);
-            top.setPosition(0,5,-5);
-            top.setRotX(270);
-            getCurrentScene().addChild(top);
-
-            back.setMaterial(material);
-            back.setColor(0xc4c4c4);
-            bottom.setMaterial(material);
-            bottom.setColor(0xc4c4c4);
-            top.setMaterial(material);
-            top.setColor(0xc4c4c4);
-            side1.setMaterial(material);
-            side1.setColor(0xc4c4c4);
-            side2.setMaterial(material);
-            side2.setColor(0xc4c4c4);
-        } catch(Exception e) {
+            mCameraAnim = new RotateOnAxisAnimation(Vector3.Axis.Y, 360);
+            mCameraAnim.setDurationMilliseconds(8000);
+            mCameraAnim.setRepeatMode(Animation.RepeatMode.INFINITE);
+            mCameraAnim.setTransformable3D(mObjectGroup);
+        } catch (ParsingException e) {
             e.printStackTrace();
         }
+
+        Material material = new Material();
+        material.enableLighting(true);
+        material.setDiffuseMethod(new DiffuseMethod.Lambert());
+
+        mObjectGroup.setMaterial(material);
+        mObjectGroup.setColor(0x3F3F3F);
+        getCurrentScene().registerAnimation(mCameraAnim);
+        mCameraAnim.play();
     }
 
     @Override
@@ -98,16 +95,58 @@ public class CubeRoomRenderer extends AbstractTrackingRenderer implements OnObje
             getCurrentScene().setBackgroundColor(0, 0, 0, 255);
     }
 
-    public void onTouchEvent(MotionEvent event){}
-
     public void onOffsetsChanged(float x, float y, float z, float w, int i, int j){}
 
-    public void getObjectAt(float x, float y) {
-        mPicker.getObjectAt(x, y);
+    @Override
+    public void onTouchEvent(MotionEvent event){
     }
 
-    @Override
-    public void onObjectPicked(Object3D object) {
-        object.setZ(object.getZ() == 0 ? -2 : 0);
+    private void planeObjects(){
+//        back = new Plane(10,10,1,1);
+//        back.setPosition(0,0, -10);
+//        back.setDoubleSided(true);
+//
+//        getCurrentScene().addChild(back);
+//
+//        side1 = new Plane(10,10,1,1);
+//        side1.setDoubleSided(true);
+//        side1.setPosition(-5,0,-5);
+//        side1.setRotY(270);
+//        mPicker.registerObject(side1);
+//        getCurrentScene().addChild(side1);
+//
+//        side2 = new Plane(10,10,1,1);
+//        side2.setDoubleSided(true);
+//        side2.setPosition(5,0, -5);
+//        side2.setRotY(90);
+//        mPicker.registerObject(side2);
+//        getCurrentScene().addChild(side2);
+//
+//        bottom = new Plane(10,10,1,1);
+//        bottom.setDoubleSided(true);
+//        bottom.setPosition(0,-5,-5);
+//        bottom.setRotX(90);
+//        mPicker.registerObject(bottom);
+//        getCurrentScene().addChild(bottom);
+//
+//        top = new Plane(10,10,1,1);
+//        top.setDoubleSided(true);
+//        top.setPosition(0,5,-5);
+//        top.setRotX(270);
+//        mPicker.registerObject(top);
+//        getCurrentScene().addChild(top);
+//
+//        back.setMaterial(material);
+//        back.setColor(0x663333);
+//        bottom.setMaterial(material);
+//        bottom.setColor(0x336633);
+//        top.setMaterial(material);
+//        top.setColor(0x333366);
+//        side1.setMaterial(material);
+//        side1.setColor(0x333333);
+//        side2.setMaterial(material);
+//        side2.setColor(0x333333);
     }
+
+
 }
