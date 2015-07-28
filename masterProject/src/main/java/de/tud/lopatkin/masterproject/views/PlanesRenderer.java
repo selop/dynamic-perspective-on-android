@@ -92,6 +92,9 @@ public class PlanesRenderer extends AbstractTrackingRenderer implements OnObject
         planes.setDoubleSided(true);
         planes.setZ(4);
         mPicker.registerObject(planes);
+
+        planes.setScale(10f);
+
         getCurrentScene().addChild(planes);
 
         Object3D empty = new Object3D();
@@ -223,8 +226,6 @@ public class PlanesRenderer extends AbstractTrackingRenderer implements OnObject
     public void stopMovingSelectedObject() {
         mSelectedObject = null;
     }
-
-
 
     public void onOffsetsChanged(float x, float y, float z, float w, int i, int j){}
 

@@ -13,6 +13,7 @@ import org.rajawali3d.loader.ParsingException;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
 import org.rajawali3d.math.vector.Vector3;
+import org.rajawali3d.primitives.Plane;
 import org.rajawali3d.util.ObjectColorPicker;
 import org.rajawali3d.util.OnObjectPickedListener;
 
@@ -40,7 +41,7 @@ public class CubeRoomRenderer extends AbstractTrackingRenderer implements OnObje
 
         mLight = new PointLight();
         mLight.setPosition(-2, 1, 4);
-        mLight.setPower(1f);
+        mLight.setPower(0.5f);
 
         mPicker = new ObjectColorPicker(this);
         mPicker.setOnObjectPickedListener(this);
@@ -53,7 +54,7 @@ public class CubeRoomRenderer extends AbstractTrackingRenderer implements OnObje
         try {
             objParser.parse();
             mObjectGroup = objParser.getParsedObject();
-            mObjectGroup.setScale(0.01f);
+            mObjectGroup.setScale(0.0025f);
             mObjectGroup.setY(-2);
             mPicker.registerObject(mObjectGroup);
             getCurrentScene().addChild(mObjectGroup);
@@ -70,10 +71,13 @@ public class CubeRoomRenderer extends AbstractTrackingRenderer implements OnObje
         material.enableLighting(true);
         material.setDiffuseMethod(new DiffuseMethod.Lambert());
 
+        //planeObjects(material);
+
         mObjectGroup.setMaterial(material);
         mObjectGroup.setColor(0x3F3F3F);
         getCurrentScene().registerAnimation(mCameraAnim);
         mCameraAnim.play();
+
     }
 
     @Override
@@ -95,51 +99,51 @@ public class CubeRoomRenderer extends AbstractTrackingRenderer implements OnObje
     public void onTouchEvent(MotionEvent event){
     }
 
-    private void planeObjects(){
-//        back = new Plane(10,10,1,1);
-//        back.setPosition(0,0, -10);
-//        back.setDoubleSided(true);
-//
-//        getCurrentScene().addChild(back);
-//
-//        side1 = new Plane(10,10,1,1);
-//        side1.setDoubleSided(true);
-//        side1.setPosition(-5,0,-5);
-//        side1.setRotY(270);
-//        mPicker.registerObject(side1);
-//        getCurrentScene().addChild(side1);
-//
-//        side2 = new Plane(10,10,1,1);
-//        side2.setDoubleSided(true);
-//        side2.setPosition(5,0, -5);
-//        side2.setRotY(90);
-//        mPicker.registerObject(side2);
-//        getCurrentScene().addChild(side2);
-//
-//        bottom = new Plane(10,10,1,1);
-//        bottom.setDoubleSided(true);
-//        bottom.setPosition(0,-5,-5);
-//        bottom.setRotX(90);
-//        mPicker.registerObject(bottom);
-//        getCurrentScene().addChild(bottom);
-//
-//        top = new Plane(10,10,1,1);
-//        top.setDoubleSided(true);
-//        top.setPosition(0,5,-5);
-//        top.setRotX(270);
-//        mPicker.registerObject(top);
-//        getCurrentScene().addChild(top);
-//
-//        back.setMaterial(material);
-//        back.setColor(0x663333);
-//        bottom.setMaterial(material);
-//        bottom.setColor(0x336633);
-//        top.setMaterial(material);
-//        top.setColor(0x333366);
-//        side1.setMaterial(material);
-//        side1.setColor(0x333333);
-//        side2.setMaterial(material);
-//        side2.setColor(0x333333);
+    private void planeObjects(Material material){
+        back = new Plane(10,10,1,1);
+        back.setPosition(0,0, -10);
+        back.setDoubleSided(true);
+
+        getCurrentScene().addChild(back);
+
+        side1 = new Plane(10,10,1,1);
+        side1.setDoubleSided(true);
+        side1.setPosition(-5,0,-5);
+        side1.setRotY(270);
+        mPicker.registerObject(side1);
+        getCurrentScene().addChild(side1);
+
+        side2 = new Plane(10,10,1,1);
+        side2.setDoubleSided(true);
+        side2.setPosition(5,0, -5);
+        side2.setRotY(90);
+        mPicker.registerObject(side2);
+        getCurrentScene().addChild(side2);
+
+        bottom = new Plane(10,10,1,1);
+        bottom.setDoubleSided(true);
+        bottom.setPosition(0,-5,-5);
+        bottom.setRotX(90);
+        mPicker.registerObject(bottom);
+        getCurrentScene().addChild(bottom);
+
+        top = new Plane(10,10,1,1);
+        top.setDoubleSided(true);
+        top.setPosition(0,5,-5);
+        top.setRotX(270);
+        mPicker.registerObject(top);
+        getCurrentScene().addChild(top);
+
+        back.setMaterial(material);
+        back.setColor(0x663333);
+        bottom.setMaterial(material);
+        bottom.setColor(0x336633);
+        top.setMaterial(material);
+        top.setColor(0x333366);
+        side1.setMaterial(material);
+        side1.setColor(0x333333);
+        side2.setMaterial(material);
+        side2.setColor(0x333333);
     }
 
 

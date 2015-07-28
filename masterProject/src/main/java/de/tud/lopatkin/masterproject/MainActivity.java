@@ -147,6 +147,7 @@ CvCameraViewListener2, SensorEventListener {
 	};
 
     // ------------------------------ OpenCV Callbacks --------------------------------------- //
+    // --------------------------------------------------------------------------------------- //
 
     /**
      * Called as the cvCameraView is being started.
@@ -177,8 +178,11 @@ CvCameraViewListener2, SensorEventListener {
         return jTracker.detectFace(inputFrame);
     }
 
+    // ----------------------------- Android Callbacks --------------------------------------- //
+    // --------------------------------------------------------------------------------------- //
+
     private void stallActivity() {
-        Toast.makeText(this, "Delayed Toast!", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Delayed Toast!", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -344,7 +348,8 @@ CvCameraViewListener2, SensorEventListener {
                 mRenderer.getObjectAt(event.getX(), event.getY());
                 break;
             case MotionEvent.ACTION_MOVE:
-                mRenderer.moveSelectedObject(event.getX(), event.getY());
+            // TODO fix this, gluUnproject seems not to work properly
+            //    mRenderer.moveSelectedObject(event.getX(), event.getY());
                 break;
             case MotionEvent.ACTION_UP:
                 mRenderer.stopMovingSelectedObject();

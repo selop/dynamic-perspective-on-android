@@ -2,6 +2,7 @@ package de.tud.lopatkin.masterproject.tracking;
 
 
 import android.util.Log;
+import android.widget.Toast;
 
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.core.Core;
@@ -81,8 +82,8 @@ public class JavaTracker {
 			Log.d(TAG, "found faces : " + faces.length);
 
             //-- points in pixel
-			Point leftEye = new Point(face.x+face.width*0.3, face.y+face.height*0.37 );
-			Point rightEye = new Point(face.x+face.width*0.7, face.y+face.height*0.37 );
+			Point leftEye   = new Point(face.x+face.width*0.3, face.y+face.height*0.37 );
+			Point rightEye  = new Point(face.x+face.width*0.7, face.y+face.height*0.37 );
 			Point eyeCenter = new Point(face.x+face.width*0.5, leftEye.y );
 
             //-- normalize with front cam internal parameters
@@ -97,11 +98,11 @@ public class JavaTracker {
 			float tempY = (float) (-normCenterY*cam.getZ());
 
             // TODO: this is a hack
-            tempZ=tempZ-80;
+            tempZ=tempZ-100;
 
-			cam.setX(cam.getX()*0.2f  + tempX*4f);
-			cam.setY(cam.getY()*0.7f  + tempY*0.2f);
-			cam.setZ(cam.getZ()*0.99f  + tempZ*0.01f);
+			cam.setX(cam.getX()*0.5f  + tempX*5f);
+			cam.setY(cam.getY()*0.7f  + tempY*0.3f);
+			cam.setZ(cam.getZ()*0.999f  + tempZ*0.001f);
 
 			Log.d(TAG, "Coord  Cam : " + cam.getX() + " " + cam.getY() + " " + cam.getZ());
 			Log.d(TAG, "Coord  Tmp : " + tempX + " " + tempY + " " + tempZ );
@@ -153,18 +154,6 @@ public class JavaTracker {
 		mRgba.release();
 	}
 
-	public float getCamWidth() {
-		return camWidth;
-	}
-	public void setCamWidth(int camWidth) {
-		this.camWidth = camWidth;
-	}
-	public float getCamHeight() {
-		return camHeight;
-	}
-	public void setCamHeight(int camHeight) {
-		this.camHeight = camHeight;
-	}
     public RajawaliRenderer getRenderer() {
         return renderer;
     }
