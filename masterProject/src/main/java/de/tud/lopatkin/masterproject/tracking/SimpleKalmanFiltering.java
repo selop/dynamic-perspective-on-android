@@ -9,8 +9,9 @@ public class SimpleKalmanFiltering {
 		
 		KalmanFilter kF = new KalmanFilter(4,2,0,0);
 		
-		// TODO: usable in android version??
-		
+		// DONE: usable in android version??
+
+		// Unfortunately the java wrapper does not provide the kalman functions
 		
 		return kF;
 	}

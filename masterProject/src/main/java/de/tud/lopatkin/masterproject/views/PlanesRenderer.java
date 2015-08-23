@@ -229,4 +229,18 @@ public class PlanesRenderer extends AbstractTrackingRenderer implements OnObject
 
     public void onOffsetsChanged(float x, float y, float z, float w, int i, int j){}
 
+    public void setAccelerometerValues(float x, float y, float z) {
+        mAccValues.setAll(-x, -y, -z);
+    }
+
+    public Vector3 getAccelerometerValues(){ return mAccValues; }
+
+    public void setCamTracking(){
+        trackingMode = TRACKING_MODE_CAM;
+    }
+
+    public void setSensorTracking(){
+        trackingMode = TRACKING_MODE_SENSOR;
+    }
+
 }

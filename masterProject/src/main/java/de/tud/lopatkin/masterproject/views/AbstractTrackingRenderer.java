@@ -20,10 +20,28 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public abstract class AbstractTrackingRenderer extends RajawaliRenderer implements OnObjectPickedListener {
 
+    public static final int TRACKING_MODE_CAM = 0;
+    public static final int TRACKING_MODE_SENSOR = 1;
+
+    protected Vector3 mAccValues;
+
+    public Float baseAzimuth;
+
+    public Float basePitch;
+
+    public Float baseRoll;
+
+    protected int trackingMode;
+
     public AbstractTrackingRenderer(Context context){
         super(context);
         mViewport = new int[] { 0, 0, getViewportWidth(), getViewportHeight() };
     }
+
+    abstract public Vector3 getAccelerometerValues();
+    abstract public void setAccelerometerValues(float x, float y, float z);
+    abstract public void setCamTracking();
+    abstract public void setSensorTracking();
 
     protected boolean showTracking = true;
 
@@ -87,44 +105,6 @@ public abstract class AbstractTrackingRenderer extends RajawaliRenderer implemen
             return;
         }
 
-        //
-        // -- unproject the screen coordinate (2D) to the camera's near plane
-        //
 
-        GLU.gluUnProject(x, getViewportHeight() - y, 0, mViewMatrix.getDoubleValues(), 0,
-                mProjectionMatrix.getDoubleValues(), 0, mViewport, 0, mNearPos4, 0);
-
-        //
-        // -- unproject the screen coordinate (2D) to the camera's far plane
-        //
-
-        GLU.gluUnProject(x, getViewportHeight() - y, 1.f, mViewMatrix.getDoubleValues(), 0,
-                mProjectionMatrix.getDoubleValues(), 0, mViewport, 0, mFarPos4, 0);
-
-        //
-        // -- transform 4D coordinates (x, y, z, w) to 3D (x, y, z) by dividing
-        // each coordinate (x, y, z) by w.
-        //
-
-        mNearPos.setAll(mNearPos4[0] / mNearPos4[3], mNearPos4[1]
-                / mNearPos4[3], mNearPos4[2] / mNearPos4[3]);
-        mFarPos.setAll(mFarPos4[0] / mFarPos4[3],
-                mFarPos4[1] / mFarPos4[3], mFarPos4[2] / mFarPos4[3]);
-
-        //
-        // -- now get the coordinates for the selected object
-        //
-
-        double factor = (Math.abs(mSelectedObject.getZ()) + mNearPos.z)
-                / (getCurrentCamera().getFarPlane() - getCurrentCamera()
-                .getNearPlane());
-
-        mNewObjPos.setAll(mFarPos);
-        mNewObjPos.subtract(mNearPos);
-        mNewObjPos.multiply(factor);
-        mNewObjPos.add(mNearPos);
-
-        mSelectedObject.setX(mNewObjPos.x);
-        mSelectedObject.setY(mNewObjPos.y);
     }
 }

@@ -32,6 +32,8 @@ public class JavaTracker {
 
 	private RajawaliRenderer renderer;
 
+	private boolean cameraTrackingEnabled = true;
+
 	int camWidth, camHeight;
 
 	public JavaTracker(CascadeClassifier mJavaDetector2) {
@@ -68,16 +70,18 @@ public class JavaTracker {
 
         long startTime = System.nanoTime();
 
-		mJavaDetector.detectMultiScale(mGray, matFaces, 1.1, 2, 2, faceSize, new Size());
+		if(cameraTrackingEnabled)
+			mJavaDetector.detectMultiScale(mGray, matFaces, 1.1, 2, 2, faceSize, new Size());
 
         long endTime = System.nanoTime();
         long duration = (endTime - startTime);
+		Log.d(TAG,"tracking Enabled: " + cameraTrackingEnabled);
         Log.d(TAG, "detection faces time : " + duration/1000000 +" ms");
 
 		Rect[] faces = matFaces.toArray();
 
         //TODO : cam interal parameter find out which
-        float f=500;
+        float f=801;
 		for (Rect face : faces) {
 			Log.d(TAG, "found faces : " + faces.length);
 
@@ -100,9 +104,9 @@ public class JavaTracker {
             // TODO: this is a hack
             tempZ=tempZ-100;
 
-			cam.setX(cam.getX()*0.5f  + tempX*5f);
-			cam.setY(cam.getY()*0.7f  + tempY*0.3f);
-			cam.setZ(cam.getZ()*0.999f  + tempZ*0.001f);
+			cam.setX(cam.getX() * 0.2f + tempX * 2.8f);
+			cam.setY(cam.getY() * 0.2f + tempY * 0.8f);
+			//cam.setZ(cam.getZ()*0.999f  + tempZ*0.001f);
 
 			Log.d(TAG, "Coord  Cam : " + cam.getX() + " " + cam.getY() + " " + cam.getZ());
 			Log.d(TAG, "Coord  Tmp : " + tempX + " " + tempY + " " + tempZ );
@@ -160,4 +164,12 @@ public class JavaTracker {
     public void setRenderer(RajawaliRenderer renderer) {
         this.renderer = renderer;
     }
+
+	public boolean isCameraTrackingEnabled() {
+		return cameraTrackingEnabled;
+	}
+
+	public void setCameraTrackingEnabled(boolean cameraTrackingEnabled) {
+		this.cameraTrackingEnabled = cameraTrackingEnabled;
+	}
 }

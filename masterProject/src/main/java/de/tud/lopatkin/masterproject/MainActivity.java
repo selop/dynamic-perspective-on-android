@@ -6,6 +6,7 @@ import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
@@ -18,6 +19,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -28,6 +31,7 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 import org.opencv.objdetect.CascadeClassifier;
+import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.surface.IRajawaliSurface;
 import org.rajawali3d.surface.RajawaliSurfaceView;
 
@@ -38,6 +42,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import butterknife.ButterKnife;
+import butterknife.OnCheckedChanged;
 import butterknife.OnTouch;
 import de.tud.lopatkin.masterproject.tracking.AdjustableCameraView;
 import de.tud.lopatkin.masterproject.tracking.JavaTracker;
@@ -81,6 +86,13 @@ CvCameraViewListener2, SensorEventListener {
      * The Rajawali renderer class.
      */
 	private AbstractTrackingRenderer mRenderer;
+
+    private RadioGroup radioGroup;
+
+    private final int SENSITIVITY = 5;
+    private SensorManager mSensorManager;
+    private float mGravity[];
+
 
     private Handler mHandler = new Handler();
 
@@ -224,6 +236,16 @@ CvCameraViewListener2, SensorEventListener {
 
     	// Make sure the screen won't dim
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        setupRadioGroup();
+
+        mGravity = new float[3];
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mSensorManager.registerListener(
+                this,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                SensorManager.SENSOR_DELAY_FASTEST
+        );
     }
 
     @Override
@@ -304,7 +326,33 @@ CvCameraViewListener2, SensorEventListener {
     public void onAccuracyChanged(Sensor arg0, int arg1) {}
 
     @Override
-    public void onSensorChanged(SensorEvent arg0) {}
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float azimuth = event.values[0];
+            float pitch = event.values[1];
+            float roll = event.values[2];
+
+            if ( null == mRenderer.baseAzimuth ) {
+                mRenderer.baseAzimuth = azimuth;
+            }
+            if ( null == mRenderer.basePitch ) {
+                mRenderer.basePitch = pitch;
+            }
+            if ( null == mRenderer.baseRoll ) {
+                mRenderer.baseRoll = roll;
+            }
+
+            float azimuthDifference = azimuth - mRenderer.baseAzimuth;
+            float pitchDifference = pitch - mRenderer.basePitch;
+            float rollDifference = roll - mRenderer.baseRoll;
+
+            mRenderer.baseRoll = roll;
+            mRenderer.basePitch = pitch;
+
+            mRenderer.getAccelerometerValues().subtract(new Vector3(0, rollDifference, 0));
+            mRenderer.getAccelerometerValues().subtract(new Vector3(pitchDifference, 0, 0));
+        }
+    }
 
     int prevX = 0,prevY = 0; // this has to be outside of the callback
     @OnTouch(R.id.fd_activity_surface_view)
@@ -341,6 +389,15 @@ CvCameraViewListener2, SensorEventListener {
         return false;
     }
 
+
+    @OnTouch(R.id.resetButton)
+    public boolean resetCamera(final View v,final MotionEvent event){
+        mRenderer.getCurrentCamera().setPosition(0,0,10);
+        mRenderer.getCurrentCamera().setLookAt(0,1,0);
+
+        return true;
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
@@ -357,4 +414,28 @@ CvCameraViewListener2, SensorEventListener {
         }
         return true;
     }
+
+
+    private void setupRadioGroup(){
+        radioGroup = (RadioGroup)findViewById(R.id.myRadioGroup);
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup radioGroup, int i) {
+                if(i == R.id.Camera){
+                    Toast.makeText(getApplicationContext(),"Cam checked",Toast.LENGTH_SHORT).show();
+                    mRenderer.setCamTracking();
+                    jTracker.setCameraTrackingEnabled(true);
+                }
+
+                if(i == R.id.Accelerometer){
+                    Toast.makeText(getApplicationContext(),"Accelerometer checked",Toast.LENGTH_SHORT).show();
+                    mRenderer.setSensorTracking();
+                    jTracker.setCameraTrackingEnabled(false);
+                }
+
+            }
+        });
+    }
+
+
 }
