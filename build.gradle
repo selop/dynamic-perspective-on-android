@@ -6,12 +6,16 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.1.0'
+        classpath 'me.tatarka:gradle-retrolambda:3.2.3'
     }
 }
 
 allprojects {
     repositories {
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        mavenCentral()
         jcenter()
     }
 }
+
+apply plugin: 'me.tatarka.retrolambda'

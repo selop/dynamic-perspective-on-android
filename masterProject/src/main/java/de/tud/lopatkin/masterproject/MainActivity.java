@@ -19,7 +19,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
@@ -42,14 +41,12 @@ import java.io.InputStream;
 import java.util.List;
 
 import butterknife.ButterKnife;
-import butterknife.OnCheckedChanged;
 import butterknife.OnTouch;
 import de.tud.lopatkin.masterproject.tracking.AdjustableCameraView;
 import de.tud.lopatkin.masterproject.tracking.JavaTracker;
 import de.tud.lopatkin.masterproject.util.Common;
 import de.tud.lopatkin.masterproject.views.AbstractTrackingRenderer;
 import de.tud.lopatkin.masterproject.views.CubeRoomRenderer;
-import de.tud.lopatkin.masterproject.views.PlanesRenderer;
 
 public class MainActivity extends ActionBarActivity implements
 CvCameraViewListener2, SensorEventListener {
@@ -87,12 +84,9 @@ CvCameraViewListener2, SensorEventListener {
      */
 	private AbstractTrackingRenderer mRenderer;
 
-    private RadioGroup radioGroup;
+    private RadioGroup mRadioGroup;
 
-    private final int SENSITIVITY = 5;
     private SensorManager mSensorManager;
-    private float mGravity[];
-
 
     private Handler mHandler = new Handler();
 
@@ -104,7 +98,7 @@ CvCameraViewListener2, SensorEventListener {
      * The Callback for loading the OpenCV library.
      * If the lib has been loaded successfully the cvCameraView is being started.
      * The fps meter will be enabled.
-     * The tracker will be initialised with the loaded Haar cascade classifier.
+     * The tracker will be initialised with the loaded Haar-Cascade classifier.
      */
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 		@Override
@@ -132,9 +126,12 @@ CvCameraViewListener2, SensorEventListener {
 					if (mCascadeClassifier.empty()) {
 						Log.e(TAG, "Failed to load cascade classifier");
 						mCascadeClassifier = null;
-					} else
-						Log.i(TAG, "Loaded cascade classifier from "+ mCascadeFile.getAbsolutePath());
-					cascadeDir.delete();
+					} else{
+                        Log.i(TAG, "Loaded cascade classifier from "+ mCascadeFile.getAbsolutePath());
+                    }
+
+                    boolean del = cascadeDir.delete();
+					Log.i(TAG, "Cascade Directory deleted: " + del);
 
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -239,7 +236,6 @@ CvCameraViewListener2, SensorEventListener {
 
         setupRadioGroup();
 
-        mGravity = new float[3];
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mSensorManager.registerListener(
                 this,
@@ -266,6 +262,7 @@ CvCameraViewListener2, SensorEventListener {
         return super.onCreateOptionsMenu(menu);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.i(TAG, "called onOptionsItemSelected; selected item: " + item);
@@ -332,17 +329,16 @@ CvCameraViewListener2, SensorEventListener {
             float pitch = event.values[1];
             float roll = event.values[2];
 
-            if ( null == mRenderer.baseAzimuth ) {
+            if ( null == mRenderer.baseAzimuth )
                 mRenderer.baseAzimuth = azimuth;
-            }
-            if ( null == mRenderer.basePitch ) {
-                mRenderer.basePitch = pitch;
-            }
-            if ( null == mRenderer.baseRoll ) {
-                mRenderer.baseRoll = roll;
-            }
 
-            float azimuthDifference = azimuth - mRenderer.baseAzimuth;
+            if ( null == mRenderer.basePitch )
+                mRenderer.basePitch = pitch;
+
+            if ( null == mRenderer.baseRoll )
+                mRenderer.baseRoll = roll;
+
+
             float pitchDifference = pitch - mRenderer.basePitch;
             float rollDifference = roll - mRenderer.baseRoll;
 
@@ -415,25 +411,24 @@ CvCameraViewListener2, SensorEventListener {
         return true;
     }
 
-
     private void setupRadioGroup(){
-        radioGroup = (RadioGroup)findViewById(R.id.myRadioGroup);
-        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup radioGroup, int i) {
-                if(i == R.id.Camera){
-                    Toast.makeText(getApplicationContext(),"Cam checked",Toast.LENGTH_SHORT).show();
-                    mRenderer.setCamTracking();
-                    jTracker.setCameraTrackingEnabled(true);
-                }
 
-                if(i == R.id.Accelerometer){
-                    Toast.makeText(getApplicationContext(),"Accelerometer checked",Toast.LENGTH_SHORT).show();
-                    mRenderer.setSensorTracking();
-                    jTracker.setCameraTrackingEnabled(false);
-                }
+        mRadioGroup = (RadioGroup)findViewById(R.id.myRadioGroup);
 
+        mRadioGroup.setOnCheckedChangeListener((radioGroup, i) -> {
+
+            if (i == R.id.Camera) {
+                Toast.makeText(getApplicationContext(), "Cam checked", Toast.LENGTH_SHORT).show();
+                mRenderer.setCamTracking();
+                jTracker.setCameraTrackingEnabled(true);
             }
+
+            if (i == R.id.Accelerometer) {
+                Toast.makeText(getApplicationContext(), "Accelerometer checked", Toast.LENGTH_SHORT).show();
+                mRenderer.setSensorTracking();
+                jTracker.setCameraTrackingEnabled(false);
+            }
+
         });
     }
 
