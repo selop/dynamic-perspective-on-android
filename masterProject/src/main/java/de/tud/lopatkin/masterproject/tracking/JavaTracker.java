@@ -104,8 +104,8 @@ public class JavaTracker {
             // TODO: this is a hack
             tempZ=tempZ-100;
 
-			cam.setX(cam.getX() * 0.2f + tempX * 2.8f);
-			cam.setY(cam.getY() * 0.2f + tempY * 0.8f);
+			cam.setX(cam.getX() * 0.2f + tempX * 5f);
+			cam.setY(cam.getY() * 0.2f + tempY * 4f);
 			//cam.setZ(cam.getZ()*0.999f  + tempZ*0.001f);
 
 			Log.d(TAG, "Coord  Cam : " + cam.getX() + " " + cam.getY() + " " + cam.getZ());
