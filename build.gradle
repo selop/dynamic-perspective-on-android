@@ -17,5 +17,3 @@ allprojects {
         jcenter()
     }
 }
-
-apply plugin: 'me.tatarka.retrolambda'
