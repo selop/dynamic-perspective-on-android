@@ -13,6 +13,11 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Adapted from the OpenCV examples to use filter effects and change resolutions.
+ *
+ * @author Sergej Lopatkin
+ */
 public class AdjustableCameraView extends JavaCameraView implements PictureCallback {
 
     private static final String TAG = "AdjustableCameraView";

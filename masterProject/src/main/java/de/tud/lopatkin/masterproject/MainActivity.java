@@ -84,11 +84,15 @@ CvCameraViewListener2, SensorEventListener {
      */
 	private AbstractTrackingRenderer mRenderer;
 
+    /**
+     * Radio Group to switch interaction modes.
+     */
     private RadioGroup mRadioGroup;
 
+    /**
+     * SensorManager to retrieve accelerometer values.
+     */
     private SensorManager mSensorManager;
-
-    private Handler mHandler = new Handler();
 
     public MainActivity() {
         Log.i(TAG, "Instantiated new " + ((Object) this).getClass());
@@ -188,23 +192,12 @@ CvCameraViewListener2, SensorEventListener {
     }
 
     // ----------------------------- Android Callbacks --------------------------------------- //
-    // --------------------------------------------------------------------------------------- //
-
-    private void stallActivity() {
-        //Toast.makeText(this, "Delayed Toast!", Toast.LENGTH_SHORT).show();
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	Log.i(TAG, "called onCreate");
     	super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        mHandler.postDelayed(new Runnable() {
-            public void run() {
-                stallActivity();
-            }
-        }, 5000);
 
         ButterKnife.inject(this);
 
@@ -255,7 +248,7 @@ CvCameraViewListener2, SensorEventListener {
         }
         mResolutionList = mOpenCvCameraView.getResolutionList();
         int idx = 0;
-        for(Camera.Size size : mResolutionList){
+        for(@SuppressWarnings("deprecation") Camera.Size size : mResolutionList){
             mResolutionMenu.add(2,idx,Menu.NONE,Common.asString(size));
             idx++;
         }

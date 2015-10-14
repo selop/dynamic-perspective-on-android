@@ -2,7 +2,6 @@ package de.tud.lopatkin.masterproject.tracking;
 
 
 import android.util.Log;
-import android.widget.Toast;
 
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.core.Core;
@@ -21,19 +20,48 @@ import java.math.BigDecimal;
 
 import de.tud.lopatkin.masterproject.util.Color;
 
+// todo implement ITracker
+/**
+ * Simple tracking algorithm: Detect a users face via Haar-Cascade classifier and synchronize
+ * the renderer Camera classes position.
+ *
+ * @author Sergej Lopatkin
+ */
 public class JavaTracker {
 	
 	private static final String TAG = "JavaTracker";
 
+	/**
+	 * The image in color and grey format.
+	 */
 	private Mat mRgba,mGray;
+
+	/**
+	 * Setting an absolute value for the approx. face size relative to the screen.
+	 *
+	 */
 	private float mRelativeFaceSize = 0.25f;
 	private int mAbsoluteFaceSize = 0;
-	private CascadeClassifier mJavaDetector;	
 
+    /**
+     * Reference to the trained cascade file.
+     */
+    private CascadeClassifier mJavaDetector;
+
+    /**
+     *
+     * Reference to the renderer class to sync. user position with camera position.
+     */
 	private RajawaliRenderer renderer;
 
+    /**
+     * Is tracking enabled?*
+     */
 	private boolean cameraTrackingEnabled = true;
 
+    /**
+     *
+     */
 	int camWidth, camHeight;
 
 	public JavaTracker(CascadeClassifier mJavaDetector2) {
@@ -133,12 +161,6 @@ public class JavaTracker {
 
 		return mRgba;
 	}
-	
-	public static double round(double d, int decimalPlace) {
-        BigDecimal bd = new BigDecimal(Double.toString(d));
-        bd = bd.setScale(decimalPlace, BigDecimal.ROUND_HALF_UP);
-        return bd.floatValue();
-    }
 
     public void setMinFaceSize(float faceSize) {
         mRelativeFaceSize = faceSize;
@@ -158,16 +180,9 @@ public class JavaTracker {
 		mRgba.release();
 	}
 
-    public RajawaliRenderer getRenderer() {
-        return renderer;
-    }
     public void setRenderer(RajawaliRenderer renderer) {
         this.renderer = renderer;
     }
-
-	public boolean isCameraTrackingEnabled() {
-		return cameraTrackingEnabled;
-	}
 
 	public void setCameraTrackingEnabled(boolean cameraTrackingEnabled) {
 		this.cameraTrackingEnabled = cameraTrackingEnabled;

@@ -6,12 +6,12 @@ import org.opencv.video.KalmanFilter;
 public class SimpleKalmanFiltering {
 
 	public KalmanFilter initKalman(Point coord){
-		
-		KalmanFilter kF = new KalmanFilter(4,2,0,0);
-		
+
+		KalmanFilter kF = new KalmanFilter();
+
 		// DONE: usable in android version??
 
-		// Unfortunately the java wrapper does not provide the kalman functions
+		// Unfortunately the android wrapper does not provide the kalman functions
 		
 		return kF;
 	}
