@@ -1,2 +1,2 @@
 include ':openCVLibrary2410'
-include ':masterProject'
+include ':app'
