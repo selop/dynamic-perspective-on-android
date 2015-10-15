@@ -1,4 +1,4 @@
-package de.tud.lopatkin.masterproject.tracking;
+package de.tud.lopatkin.app.tracking;
 
 
 import android.util.Log;
@@ -16,20 +16,20 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.rajawali3d.cameras.Camera;
 import org.rajawali3d.renderer.RajawaliRenderer;
 
-import java.math.BigDecimal;
+import de.tud.lopatkin.app.model.EyesShape;
+import de.tud.lopatkin.app.model.FaceShape;
+import de.tud.lopatkin.app.model.OpenCVShape;
+import de.tud.lopatkin.app.util.Color;
 
-import de.tud.lopatkin.masterproject.util.Color;
-
-// todo implement ITracker
 /**
  * Simple tracking algorithm: Detect a users face via Haar-Cascade classifier and synchronize
  * the renderer Camera classes position.
  *
  * @author Sergej Lopatkin
  */
-public class JavaTracker {
+public class HaarCascadeTracker implements Tracker {
 	
-	private static final String TAG = "JavaTracker";
+	private static final String TAG = "HaarCascadeTracker";
 
 	/**
 	 * The image in color and grey format.
@@ -46,7 +46,7 @@ public class JavaTracker {
     /**
      * Reference to the trained cascade file.
      */
-    private CascadeClassifier mJavaDetector;
+    private CascadeClassifier classifier;
 
     /**
      *
@@ -60,14 +60,15 @@ public class JavaTracker {
 	private boolean cameraTrackingEnabled = true;
 
     /**
-     *
+     *  Image width, heigt. Depends on the input CVFrame.
      */
 	int camWidth, camHeight;
 
-	public JavaTracker(CascadeClassifier mJavaDetector2) {
-		this.mJavaDetector = mJavaDetector2;
+	public HaarCascadeTracker(CascadeClassifier classifier) {
+		this.classifier = classifier;
 	}
 
+    @Override
 	public Mat detectFace(CvCameraViewFrame inputFrame){
 
         if ( inputFrame.rgba().empty() ){
@@ -83,8 +84,6 @@ public class JavaTracker {
         // flip the preview image to make sure the preview acts like a mirror
 		Core.flip(mRgba, mRgba, 1);
 		Core.flip(mGray, mGray, 1);
-		
-		//Imgproc.GaussianBlur(mGray, mGray, new Size(), 2, 2, Imgproc.BORDER_DEFAULT);
 		Imgproc.equalizeHist(mGray, mGray);
 
 		if (mAbsoluteFaceSize == 0) {
@@ -99,7 +98,7 @@ public class JavaTracker {
         long startTime = System.nanoTime();
 
 		if(cameraTrackingEnabled)
-			mJavaDetector.detectMultiScale(mGray, matFaces, 1.1, 2, 2, faceSize, new Size());
+			classifier.detectMultiScale(mGray, matFaces, 1.1, 2, 2, faceSize, new Size());
 
         long endTime = System.nanoTime();
         long duration = (endTime - startTime);
@@ -137,25 +136,19 @@ public class JavaTracker {
 			//cam.setZ(cam.getZ()*0.999f  + tempZ*0.001f);
 
 			Log.d(TAG, "Coord  Cam : " + cam.getX() + " " + cam.getY() + " " + cam.getZ());
-			Log.d(TAG, "Coord  Tmp : " + tempX + " " + tempY + " " + tempZ );
+			Log.d(TAG, "Coord  Tmp : " + tempX + " " + tempY + " " + tempZ);
 
-			Core.rectangle(mRgba, face.tl(), face.br(), Color.FACE_RECT_COLOR, 3);
+			// drawing a green box surrounding the face
+			OpenCVShape faceBox = new FaceShape(face, mRgba);
+			faceBox.draw();
 
-			Point leftPt   = new Point(face.x,face.y+face.height*0.37 );
-			Point rightPt  = new Point(face.x+face.width, face.y+face.height*0.37 );
-			Point topPt    = new Point(face.x+face.width*0.5, face.y);
-			Point bottomPt = new Point(face.x+face.width*0.5, face.y+face.height);
-			Core.line(mRgba, leftPt, rightPt, Color.WHITE, 1, 1, 0);
-			Core.line(mRgba, topPt, bottomPt, Color.WHITE, 1, 1, 0);
+			// drawing circles at the position of the eyes
+			OpenCVShape eyes = new EyesShape(face,mRgba,leftEye,rightEye,eyeCenter);
+			eyes.draw();
 
-			Core.circle(mRgba, leftEye , (int) (0.06*face.width), Color.BLACK , 1, 8, 0);
-			Core.circle(mRgba, rightEye, (int) (0.06*face.width), Color.BLACK, 1, 8, 0);
-
-			Core.line(mRgba, leftEye, rightEye, Color.BLUE, 1, 1, 0);
-			Core.circle(mRgba, eyeCenter, 2,  Color.BLUE, 3, 1, 0);
-
+			Point offsetToEyeCenter = new Point(eyeCenter.x + 20, eyeCenter.y + 20);
 			Core.putText(mRgba, "[" + eyeCenter.x + "," + eyeCenter.y + "]",
-					new Point(eyeCenter.x + 20, eyeCenter.y + 20),
+					offsetToEyeCenter,
 					Core.FONT_HERSHEY_SIMPLEX, 0.7, Color.BLACK);
 		}
 
@@ -168,6 +161,7 @@ public class JavaTracker {
     }
 	
 	public void init(int width, int height) {
+        Log.i(TAG, "Init tracker with width: " + width + " and " + height);
 		this.camWidth = width;
 		this.camHeight = height;
 		mGray = new Mat();
@@ -187,4 +181,5 @@ public class JavaTracker {
 	public void setCameraTrackingEnabled(boolean cameraTrackingEnabled) {
 		this.cameraTrackingEnabled = cameraTrackingEnabled;
 	}
+
 }

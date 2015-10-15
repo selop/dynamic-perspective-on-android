@@ -1,4 +1,4 @@
-package de.tud.lopatkin.masterproject.util;
+package de.tud.lopatkin.app.util;
 
 import android.hardware.Camera;
 

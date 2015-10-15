@@ -1,14 +1,12 @@
-package de.tud.lopatkin.masterproject.views;
+package de.tud.lopatkin.app.views;
 
 import android.content.Context;
 import android.util.Log;
 
 import org.rajawali3d.Object3D;
-import org.rajawali3d.lights.PointLight;
 import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.renderer.RajawaliRenderer;
-import org.rajawali3d.util.GLU;
 import org.rajawali3d.util.ObjectColorPicker;
 import org.rajawali3d.util.OnObjectPickedListener;
 

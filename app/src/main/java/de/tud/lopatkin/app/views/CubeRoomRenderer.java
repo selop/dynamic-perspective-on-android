@@ -1,4 +1,4 @@
-package de.tud.lopatkin.masterproject.views;
+package de.tud.lopatkin.app.views;
 
 import android.app.Activity;
 import android.content.Context;
@@ -9,7 +9,6 @@ import org.rajawali3d.animation.Animation3D;
 import org.rajawali3d.cameras.ArcballCamera;
 import org.rajawali3d.lights.ALight;
 import org.rajawali3d.lights.DirectionalLight;
-import org.rajawali3d.lights.PointLight;
 import org.rajawali3d.loader.LoaderOBJ;
 import org.rajawali3d.loader.ParsingException;
 import org.rajawali3d.materials.Material;
@@ -22,7 +21,7 @@ import org.rajawali3d.util.debugvisualizer.GridFloor;
 
 import java.util.Random;
 
-import de.tud.lopatkin.masterproject.R;
+import de.tud.lopatkin.app.R;
 
 /**
  * This class displays a room to test object picking.

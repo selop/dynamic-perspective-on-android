@@ -1,4 +1,4 @@
-package de.tud.lopatkin.masterproject.model;
+package de.tud.lopatkin.app.model;
 
 import android.opengl.GLES20;
 

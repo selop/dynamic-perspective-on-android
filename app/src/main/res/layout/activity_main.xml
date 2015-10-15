@@ -3,9 +3,9 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="de.tud.lopatkin.masterproject.MainActivity">
+    tools:context="de.tud.lopatkin.app.MainActivity">
 
-       <de.tud.lopatkin.masterproject.tracking.AdjustableCameraView
+       <de.tud.lopatkin.app.tracking.AdjustableCameraView
         android:layout_width="200dp"
         android:layout_height="150dp"
         android:id="@+id/fd_activity_surface_view"/>

@@ -1,4 +1,4 @@
-package de.tud.lopatkin.masterproject;
+package de.tud.lopatkin.app;
 
 import android.app.ActionBar;
 import android.content.Context;
@@ -8,7 +8,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -42,11 +41,11 @@ import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.OnTouch;
-import de.tud.lopatkin.masterproject.tracking.AdjustableCameraView;
-import de.tud.lopatkin.masterproject.tracking.JavaTracker;
-import de.tud.lopatkin.masterproject.util.Common;
-import de.tud.lopatkin.masterproject.views.AbstractTrackingRenderer;
-import de.tud.lopatkin.masterproject.views.CubeRoomRenderer;
+import de.tud.lopatkin.app.tracking.AdjustableCameraView;
+import de.tud.lopatkin.app.tracking.HaarCascadeTracker;
+import de.tud.lopatkin.app.util.Common;
+import de.tud.lopatkin.app.views.AbstractTrackingRenderer;
+import de.tud.lopatkin.app.views.CubeRoomRenderer;
 
 public class MainActivity extends ActionBarActivity implements
 CvCameraViewListener2, SensorEventListener {
@@ -77,22 +76,12 @@ CvCameraViewListener2, SensorEventListener {
     /**
      * Java based face tracker based on Haar cascade detection.
      */
-	private JavaTracker jTracker;
+	private HaarCascadeTracker tracker;
 
     /**
      * The Rajawali renderer class.
      */
 	private AbstractTrackingRenderer mRenderer;
-
-    /**
-     * Radio Group to switch interaction modes.
-     */
-    private RadioGroup mRadioGroup;
-
-    /**
-     * SensorManager to retrieve accelerometer values.
-     */
-    private SensorManager mSensorManager;
 
     public MainActivity() {
         Log.i(TAG, "Instantiated new " + ((Object) this).getClass());
@@ -143,11 +132,10 @@ CvCameraViewListener2, SensorEventListener {
 				}
 				
 				// has all the OpenCV calls to detect faces / eyes
-				jTracker = new JavaTracker(mCascadeClassifier);
+				tracker = new HaarCascadeTracker(mCascadeClassifier);
 
 				mOpenCvCameraView.enableView();
 				mOpenCvCameraView.enableFpsMeter();
-                //mOpenCvCameraView.setMaxFrameSize(480,320);
 			}
 				break;
 
@@ -169,8 +157,8 @@ CvCameraViewListener2, SensorEventListener {
      * @param height - the height of the frames that will be delivered
      */
     public void onCameraViewStarted(int width, int height) {
-        jTracker.init(width,height);
-        jTracker.setRenderer(mRenderer);
+        tracker.init(width, height);
+        tracker.setRenderer(mRenderer);
     }
 
     /**
@@ -178,7 +166,7 @@ CvCameraViewListener2, SensorEventListener {
      *
      */
     public void onCameraViewStopped() {
-        jTracker.release();
+        tracker.release();
     }
 
     /**
@@ -188,7 +176,7 @@ CvCameraViewListener2, SensorEventListener {
      * @return the processed input frame as Mat
      */
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-        return jTracker.detectFace(inputFrame);
+        return tracker.detectFace(inputFrame);
     }
 
     // ----------------------------- Android Callbacks --------------------------------------- //
@@ -229,7 +217,7 @@ CvCameraViewListener2, SensorEventListener {
 
         setupRadioGroup();
 
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mSensorManager.registerListener(
                 this,
                 mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
@@ -273,16 +261,16 @@ CvCameraViewListener2, SensorEventListener {
 
         switch (item.getItemId()) {
             case R.id.menu_item_face20:
-                jTracker.setMinFaceSize(0.2f);
+                tracker.setMinFaceSize(0.2f);
                 return true;
             case R.id.menu_item_face30:
-                jTracker.setMinFaceSize(0.3f);
+                tracker.setMinFaceSize(0.3f);
                 return true;
             case R.id.menu_item_face40:
-                jTracker.setMinFaceSize(0.4f);
+                tracker.setMinFaceSize(0.4f);
                 return true;
             case R.id.menu_item_face50:
-                jTracker.setMinFaceSize(0.5f);
+                tracker.setMinFaceSize(0.5f);
                 return true;
             case R.id.menu_show_tracking:
                 mRenderer.toggleShowTracking();
@@ -405,21 +393,20 @@ CvCameraViewListener2, SensorEventListener {
     }
 
     private void setupRadioGroup(){
-
-        mRadioGroup = (RadioGroup)findViewById(R.id.myRadioGroup);
+        RadioGroup mRadioGroup = (RadioGroup) findViewById(R.id.myRadioGroup);
 
         mRadioGroup.setOnCheckedChangeListener((radioGroup, i) -> {
 
             if (i == R.id.Camera) {
                 Toast.makeText(getApplicationContext(), "Cam checked", Toast.LENGTH_SHORT).show();
                 mRenderer.setCamTracking();
-                jTracker.setCameraTrackingEnabled(true);
+                tracker.setCameraTrackingEnabled(true);
             }
 
             if (i == R.id.Accelerometer) {
                 Toast.makeText(getApplicationContext(), "Accelerometer checked", Toast.LENGTH_SHORT).show();
                 mRenderer.setSensorTracking();
-                jTracker.setCameraTrackingEnabled(false);
+                tracker.setCameraTrackingEnabled(false);
             }
 
         });

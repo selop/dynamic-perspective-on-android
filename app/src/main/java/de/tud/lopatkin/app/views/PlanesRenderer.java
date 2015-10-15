@@ -1,4 +1,4 @@
-package de.tud.lopatkin.masterproject.views;
+package de.tud.lopatkin.app.views;
 
 import android.content.Context;
 import android.util.Log;
@@ -22,9 +22,9 @@ import org.rajawali3d.util.OnObjectPickedListener;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import de.tud.lopatkin.masterproject.R;
-import de.tud.lopatkin.masterproject.model.PlanesGalore;
-import de.tud.lopatkin.masterproject.model.PlanesGaloreMaterialPlugin;
+import de.tud.lopatkin.app.R;
+import de.tud.lopatkin.app.model.PlanesGalore;
+import de.tud.lopatkin.app.model.PlanesGaloreMaterialPlugin;
 
 public class PlanesRenderer extends AbstractTrackingRenderer implements OnObjectPickedListener {
 

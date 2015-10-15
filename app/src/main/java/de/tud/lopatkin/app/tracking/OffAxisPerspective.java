@@ -1,4 +1,4 @@
-package de.tud.lopatkin.masterproject.tracking;
+package de.tud.lopatkin.app.tracking;
 
 import org.rajawali3d.cameras.Camera;
 import org.rajawali3d.math.Matrix4;

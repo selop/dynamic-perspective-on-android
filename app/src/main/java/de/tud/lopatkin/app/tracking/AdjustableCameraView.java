@@ -1,4 +1,4 @@
-package de.tud.lopatkin.masterproject.tracking;
+package de.tud.lopatkin.app.tracking;
 
 import android.content.Context;
 import android.hardware.Camera;
