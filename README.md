@@ -13,7 +13,7 @@ Manipulate 3D content with input data from sensors and the device camera.
 
 ![Showcase](resources/showcase.gif "What this project looks like in action.")
 
-This project realizes the integration of OpenCV into a Rajawali 3D application. The main purpose is to track the users face via front camera and use this information to control the virtual camera.
+This project realizes the integration of OpenCV into a Rajawali 3D application.
 Additionally the users head is tracked with OpenCV for Android, to e.g. change the point of view by simply moving your head or the device.
 The Rajawali (OpenGL ES 2.0/3.0) engine takes care of the rendering.
 
