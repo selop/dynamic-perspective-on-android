@@ -64,11 +64,16 @@ public class HaarCascadeTracker implements Tracker {
      */
 	int camWidth, camHeight;
 
+	/**
+	 *  The number of detected faces per frame.
+	 */
+	private MatOfRect matFaces;
+
 	public HaarCascadeTracker(CascadeClassifier classifier) {
 		this.classifier = classifier;
 	}
 
-    @Override
+	@Override
 	public Mat detectFace(CvCameraViewFrame inputFrame){
 
         if ( inputFrame.rgba().empty() ){
@@ -92,7 +97,7 @@ public class HaarCascadeTracker implements Tracker {
 				mAbsoluteFaceSize = Math.round(height * mRelativeFaceSize);
 		}
 
-		MatOfRect matFaces = new MatOfRect();
+		matFaces = new MatOfRect();
         Size faceSize = new Size(mAbsoluteFaceSize, mAbsoluteFaceSize);
 
         long startTime = System.nanoTime();
@@ -103,7 +108,7 @@ public class HaarCascadeTracker implements Tracker {
         long endTime = System.nanoTime();
         long duration = (endTime - startTime);
 		Log.d(TAG,"tracking Enabled: " + cameraTrackingEnabled);
-        Log.d(TAG, "detection faces time : " + duration/1000000 +" ms");
+        Log.d(TAG, "detection faces time : " + duration / 1000000 + " ms");
 
 		Rect[] faces = matFaces.toArray();
 
@@ -155,11 +160,19 @@ public class HaarCascadeTracker implements Tracker {
 		return mRgba;
 	}
 
+	public MatOfRect getMatFaces() {
+		return matFaces;
+	}
+
+	public void setMatFaces(MatOfRect matFaces) {
+		this.matFaces = matFaces;
+	}
+
     public void setMinFaceSize(float faceSize) {
         mRelativeFaceSize = faceSize;
         mAbsoluteFaceSize = 0;
     }
-	
+
 	public void init(int width, int height) {
         Log.i(TAG, "Init tracker with width: " + width + " and " + height);
 		this.camWidth = width;
@@ -167,7 +180,7 @@ public class HaarCascadeTracker implements Tracker {
 		mGray = new Mat();
 		mRgba = new Mat();
 	}
-	
+
 	public void release() {
 		Log.i(TAG, "releasing Gray + RGBA");
 		mGray.release();
